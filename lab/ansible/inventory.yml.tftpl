@@ -1,0 +1,10 @@
+# Generado por Terraform (ver ansible.tf) en cada `tofu apply` - no editar
+# a mano, los cambios se pisan en el proximo apply.
+#
+# El grupo se llama "proxmox" porque el role lae.proxmox espera por
+# defecto (pve_group) un grupo con ese nombre.
+proxmox:
+  hosts:
+    "${instance_public_ip}":
+      ansible_user: "${ssh_user}"
+      ansible_ssh_private_key_file: "${private_key_path}"

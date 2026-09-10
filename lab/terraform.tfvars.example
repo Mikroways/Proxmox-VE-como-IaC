@@ -1,0 +1,10 @@
+# Copiar a terraform.tfvars y ajustar antes de correr `tofu apply`.
+# terraform.tfvars esta en .gitignore: nunca se versiona.
+
+# IP publica propia (o rango de tu VPN/oficina) en formato CIDR.
+# Averiguala con: curl -s https://checkip.amazonaws.com
+allowed_cidr_blocks = ["203.0.113.10/32"]
+
+# region             = "us-east-1"
+# instance_type      = "c8i.2xlarge"
+# root_volume_size   = 100

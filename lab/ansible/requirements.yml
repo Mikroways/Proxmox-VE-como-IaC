@@ -1,0 +1,10 @@
+---
+# Pineado a un tag exacto (no rama/latest) por lo mismo que pineamos
+# versiones de modulos de Terraform: es un role community mantenido por un
+# tercero (no oficial de Proxmox), asi que fijamos la version para que no
+# cambie de comportamiento debajo nuestro. Bump manual cuando se verifique
+# la version nueva.
+roles:
+  - name: lae.proxmox
+    src: https://github.com/lae/ansible-role-proxmox.git
+    version: v1.10.1

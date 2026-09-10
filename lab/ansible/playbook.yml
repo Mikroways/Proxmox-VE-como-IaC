@@ -1,0 +1,60 @@
+---
+- name: Instalar y configurar Proxmox VE sobre la instancia
+  hosts: proxmox
+  become: true
+
+  pre_tasks:
+    # El role tambien instala gpg (tasks/main.yml, "Ensure gpg is
+    # installed"), pero lo hace recien antes de confiar la key de
+    # Proxmox - varios pasos despues de que apt ya necesita gpg/gpgv
+    # disponible para verificar firmas de repos. Lo adelantamos aca para
+    # que este disponible desde el arranque del play.
+    - name: Instalar gpg
+      ansible.builtin.apt:
+        name: gpg
+        state: present
+        update_cache: true
+
+  roles:
+    - role: lae.proxmox
+      vars:
+        # Sin esto no se completa la instalacion: el role necesita
+        # reiniciar despues de instalar el kernel PVE antes de poder
+        # instalar los paquetes de proxmox-ve. El resto de las opciones
+        # (repo pve-no-subscription, /etc/hosts, etc.) se dejan en su
+        # default, que ya es lo que necesitamos para un nodo solo.
+        pve_reboot_on_kernel_update: true
+
+  tasks:
+    # La UI web de Proxmox (8006) autentica "root" via PAM con password,
+    # no con la key SSH de la instancia. Las imagenes cloud de Debian no
+    # traen password de root seteado, asi que generamos uno random.
+    - name: Generar password random para el usuario root
+      ansible.builtin.set_fact:
+        proxmox_root_password: "{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_letters', 'digits']) }}"
+      no_log: true
+
+    - name: Aplicar el password generado al usuario root
+      ansible.builtin.shell:
+        cmd: "echo 'root:{{ proxmox_root_password }}' | chpasswd"
+        executable: /bin/bash
+      no_log: true
+      changed_when: true
+
+    - name: Guardar el password en el host para poder recuperarlo por SSH
+      ansible.builtin.copy:
+        content: "{{ proxmox_root_password }}\n"
+        dest: /root/.proxmox-root-password
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+  post_tasks:
+    - name: Mostrar como acceder
+      ansible.builtin.debug:
+        msg: >-
+          Proxmox VE listo. UI: https://{{ ansible_host }}:8006
+          (usuario root, password en /root/.proxmox-root-password -
+          recuperalo con: ssh -i <key> {{ ansible_user }}@{{ ansible_host }}
+          sudo cat /root/.proxmox-root-password)
