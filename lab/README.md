@@ -166,12 +166,3 @@ Convención de red usada:
 | Subred | `10.77.100.0/24` |
 | Gateway (el propio host, haciendo NAT) | `10.77.100.1` |
 | DNS | `1.1.1.1` (o cualquier resolver alcanzable vía NAT) |
-
-### Los 3 pasos restantes
-
-> Los `.tf` de esta raíz son un solo stack de OpenTofu (provider AWS). Las
-> carpetas de `proxmox-terraform/` de abajo, en cambio, son stacks
-> **independientes** (provider Proxmox, state propio cada una) — no son
-> "menos prolijas", son así a propósito porque Proxmox ni existe hasta que
-> este primer stack + Ansible ya corrieron. Detalle completo en
-> `CONTEXT.md` §3.
