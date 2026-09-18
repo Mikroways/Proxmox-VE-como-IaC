@@ -1,60 +1,62 @@
 apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
-  name: proxmox-mw
-  namespace: management
+  name: tooling
+  namespace: tooling
   labels:
-    cluster.x-k8s.io/cluster-name: proxmox-mw
-    baseHelmCharts: enabled
+    cluster.x-k8s.io/cluster-name: tooling
+    baseHelmCharts: tooling
 spec:
   clusterNetwork:
     pods:
       cidrBlocks:
-      - 10.10.0.0/16
+      - 10.11.0.0/16
   infrastructureRef:
     apiGroup: infrastructure.cluster.x-k8s.io
     kind: ProxmoxCluster
-    name: proxmox-mw
+    name: tooling
   controlPlaneRef:
     apiGroup: controlplane.cluster.x-k8s.io
     kind: KubeadmControlPlane
-    name: proxmox-mw-control-plane
+    name: tooling-control-plane
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: ProxmoxCluster
 metadata:
-  name: proxmox-mw
-  namespace: management
+  name: tooling
+  namespace: tooling
   labels:
-    cluster.x-k8s.io/cluster-name: proxmox-mw
+    cluster.x-k8s.io/cluster-name: tooling
 spec:
   controlPlaneEndpoint:
-    host: 10.77.100.2
+    host: 10.77.100.3
     port: 6443
   dnsServers:
   - 1.1.1.1
   ipv4Config:
     addresses:
-    - 10.77.100.10-10.77.100.30
+    - 10.77.100.31-10.77.100.50
     gateway: 10.77.100.1
     prefix: 24
   allowedNodes:
   - proxmox-lab
+  credentialsRef:
+    name: tooling-proxmox-credentials
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane
 metadata:
-  name: proxmox-mw-control-plane
-  namespace: management
+  name: tooling-control-plane
+  namespace: tooling
 spec:
   replicas: 1
-  version: v1.34.11
+  version: v1.34.10
   machineTemplate:
     spec:
       infrastructureRef:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: ProxmoxMachineTemplate
-        name: proxmox-mw-control-plane
+        name: tooling-control-plane
   kubeadmConfigSpec:
     files:
     - path: /etc/capi-install-k8s.sh
@@ -65,7 +67,7 @@ spec:
         set -euo pipefail
 
         KUBERNETES_VERSION_SERIES="1.34"
-        KUBERNETES_VERSION="1.34.11"
+        KUBERNETES_VERSION="1.34.10"
 
         swapoff -a
         sed -i '/\sswap\s/s/^/#/' /etc/fstab
@@ -122,7 +124,7 @@ spec:
             - name: vip_interface
               value: ""
             - name: address
-              value: 10.77.100.2
+              value: 10.77.100.3
             - name: port
               value: "6443"
             - name: vip_arp
@@ -213,19 +215,11 @@ spec:
     - /etc/kube-vip-prepare.sh
     initConfiguration:
       nodeRegistration:
-        # Sin workers en este cluster: si kubeadm pone el taint de
-        # control-plane, clusterctl init/move (pivot) nunca puede alojar
-        # sus propios pods en este nodo (FailedScheduling). Sacarlo despues
-        # a mano desincroniza el estado esperado por CAPI (queda marcado
-        # NotReady por "NodeKubeadmLabelsAndTaintsSet") - mejor que kubeadm
-        # nunca lo ponga.
-        taints: []
         kubeletExtraArgs:
         - name: provider-id
           value: "proxmox://'{{ ds.meta_data.instance_id }}'"
     joinConfiguration:
       nodeRegistration:
-        taints: []
         kubeletExtraArgs:
         - name: provider-id
           value: "proxmox://'{{ ds.meta_data.instance_id }}'"
@@ -237,8 +231,8 @@ spec:
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: ProxmoxMachineTemplate
 metadata:
-  name: proxmox-mw-control-plane
-  namespace: management
+  name: tooling-control-plane
+  namespace: tooling
 spec:
   template:
     spec:
@@ -248,10 +242,10 @@ spec:
       format: raw
       full: true
       storage: local
-      pool: capi-management-vm
+      pool: capi-tooling-vm
       numSockets: 2
-      numCores: 2
-      memoryMiB: 4096
+      numCores: 4
+      memoryMiB: 8192
       disks:
         bootVolume:
           disk: scsi0
@@ -261,3 +255,130 @@ spec:
         - name: net0
           bridge: vmbr0
           model: virtio
+---
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: MachineDeployment
+metadata:
+  name: tooling-workers
+  namespace: tooling
+  labels:
+    cluster.x-k8s.io/cluster-name: tooling
+spec:
+  clusterName: tooling
+  replicas: 2
+  selector:
+    matchLabels:
+  template:
+    metadata:
+      labels:
+        cluster.x-k8s.io/cluster-name: tooling
+        node-role.kubernetes.io/node: ""
+    spec:
+      clusterName: tooling
+      version: v1.34.10
+      bootstrap:
+        configRef:
+          apiGroup: bootstrap.cluster.x-k8s.io
+          kind: KubeadmConfigTemplate
+          name: tooling-worker
+      infrastructureRef:
+        apiGroup: infrastructure.cluster.x-k8s.io
+        kind: ProxmoxMachineTemplate
+        name: tooling-worker
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
+kind: ProxmoxMachineTemplate
+metadata:
+  name: tooling-worker
+  namespace: tooling
+spec:
+  template:
+    spec:
+      templateSelector:
+        matchTags:
+        - ubuntu-24.04
+      format: raw
+      full: true
+      storage: local
+      pool: capi-tooling-vm
+      numSockets: 2
+      numCores: 4
+      memoryMiB: 8192
+      disks:
+        bootVolume:
+          disk: scsi0
+          sizeGb: 100
+      network:
+        networkDevices:
+        - name: net0
+          bridge: vmbr0
+          model: virtio
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
+kind: KubeadmConfigTemplate
+metadata:
+  name: tooling-worker
+  namespace: tooling
+spec:
+  template:
+    spec:
+      files:
+      - path: /etc/capi-install-k8s.sh
+        owner: root:root
+        permissions: "0700"
+        content: |
+          #!/bin/bash
+          set -euo pipefail
+
+          KUBERNETES_VERSION_SERIES="1.34"
+          KUBERNETES_VERSION="1.34.10"
+
+          swapoff -a
+          sed -i '/\sswap\s/s/^/#/' /etc/fstab
+
+          apt-get update
+          apt-get install -y apt-transport-https ca-certificates curl gpg qemu-guest-agent
+          systemctl enable --now qemu-guest-agent
+
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL "https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/Release.key" | \
+            gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+          chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+          echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/ /" \
+            > /etc/apt/sources.list.d/kubernetes.list
+
+          apt-get update
+          apt-get install -y "kubelet=${KUBERNETES_VERSION}-*" "kubeadm=${KUBERNETES_VERSION}-*" "kubectl=${KUBERNETES_VERSION}-*" containerd
+          apt-mark hold kubelet kubeadm kubectl
+
+          mkdir -p /etc/containerd
+          containerd config default > /etc/containerd/config.toml
+          sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+          systemctl restart containerd
+          systemctl enable containerd kubelet
+
+          cat <<EOF > /etc/modules-load.d/k8s.conf
+          overlay
+          br_netfilter
+          EOF
+          modprobe overlay
+          modprobe br_netfilter
+
+          cat <<EOF > /etc/sysctl.d/k8s.conf
+          net.bridge.bridge-nf-call-iptables  = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward                 = 1
+          EOF
+          sysctl --system
+      preKubeadmCommands:
+      - /etc/capi-install-k8s.sh
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+          - name: provider-id
+            value: "proxmox://'{{ ds.meta_data.instance_id }}'"
+      users:
+      - name: root
+        sshAuthorizedKeys:
+      - ${VM_SSH_KEYS}

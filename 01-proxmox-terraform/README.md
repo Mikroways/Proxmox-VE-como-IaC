@@ -1,9 +1,9 @@
 # Permisos en Proxmox con Terraform
 
-Paso 2 del taller (después de tener Proxmox VE instalado — Paso 1, en la raíz
-de `lab/`). Crea los usuarios de Proxmox (no del SO), roles, tokens, pools y
-ACLs necesarios para trabajar después con Cluster API (capmox) y el CSI de
-Proxmox.
+Paso 1 del taller (después de tener Proxmox VE instalado — Paso 0, en
+[`00-lab/`](../00-lab/)). Crea los usuarios de Proxmox (no del SO), roles,
+tokens, pools y ACLs necesarios para trabajar después con Cluster API
+(capmox) y el CSI de Proxmox.
 
 ## Antes de empezar
 
@@ -15,7 +15,7 @@ setear nada a mano.
    (los nombres de usuario pueden quedar igual, son solo convención):
 
    ```bash
-   direnv allow
+   direnv allow   # primera vez, para que direnv cargue este .envrc
    cp credentials.yaml.sample credentials.yaml
    ```
 
@@ -37,7 +37,11 @@ tofu apply
 ```
 
 Esto genera `tokens.yaml` (gitignoreado, nunca se commitea) con los tokens
-que va a consumir `../02-vm-template` y `../../clusterctl`.
+que va a consumir `../02-vm-template` y `../03-clusterctl`. Para leerlos:
+
+```bash
+cat tokens.yaml
+```
 
 ## Qué crea
 

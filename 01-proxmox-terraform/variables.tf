@@ -1,5 +1,7 @@
-# Path de ACL usado para el permiso PVESDNUser.
-# Se generaliza al path raiz de SDN Zones, valido en cualquier instalacion
+# Path de ACL usado para el permiso PVESDNUser. El PoC original apuntaba
+# a una zona SDN custom real ("localnetwork") que no existe en una
+# instalacion Proxmox VE default (como la que deja lab/ en AWS). Se
+# generaliza al path raiz de SDN Zones, valido en cualquier instalacion
 # aunque no se configuren zonas custom.
 variable "clusterapi_sdn_path" {
   type    = string

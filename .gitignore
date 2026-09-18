@@ -1,5 +1,6 @@
 # Local .terraform directories
 **/.terraform/*
+**/.terraform.lock.hcl
 
 # .tfstate files
 *.tfstate
@@ -37,8 +38,8 @@ terraform.rc
 # Ansible: roles instalados via requirements.yml (se reinstalan con
 # ansible-galaxy) e inventory generado por Terraform via ansible.tf
 # (atado a la IP de la instancia de cada apply)
-ansible/roles/
-ansible/inventory.yml
+00-lab/ansible/roles/
+00-lab/ansible/inventory.yml
 *.retry
 
 # uv: venv del proyecto (se recrea con `direnv allow` / `uv sync`).

@@ -1,6 +1,6 @@
 # Instalación de un cluster con clusterctl
 
-Paso 4 (último) del taller. `clusterctl` define un flujo de vida completo
+Paso 3 (último) del taller. `clusterctl` define un flujo de vida completo
 para clusters de Kubernetes: crear un cluster efímero (kind), instalar ahí
 los controladores necesarios para un hipervisor/cloud dado, y desde ese
 cluster inicializar clusters reales a partir de manifiestos.
@@ -38,7 +38,7 @@ que se basó).
 ## Credenciales
 
 Antes de `clusterctl init`, este directorio necesita el token `capi-management`
-(sale de `tokens.yaml`, generado por `proxmox-terraform/01-users-and-privileges`)
+(sale de `tokens.yaml`, generado por `01-proxmox-terraform`)
 para que el controller de capmox pueda autenticarse contra Proxmox.
 
 Sin esto, `clusterctl init` crea el controller con credenciales vacías y
@@ -56,19 +56,14 @@ clusterctl init --infrastructure proxmox --addon helm --ipam in-cluster
 
 ## Generate
 
-[`cluster.yaml.sample`](./cluster.yaml.sample) ya tiene todos los ajustes
-para este entorno aplicados (nodo `proxmox-lab`, red `10.77.100.0/24`,
-pool, storage, `templateSelector`, k8s v1.34.11 instalado en el boot vía
-`preKubeadmCommands`, namespace `management`, sin taint de control-plane).
-Copiarlo directo, no hace falta `clusterctl generate cluster`:
-
 ```bash
 cp cluster.yaml.sample cluster.yaml
 ```
 
-La clave SSH queda como `${VM_SSH_KEYS}` — la sustituye `envsubst` al
-aplicar, tomándola de `VM_SSH_KEYS` (definida en `.envrc.private`, nunca a
-mano en el archivo).
+Ya tiene todos los ajustes de este entorno (pool, storage,
+`templateSelector`, namespace `management`, sin taint de control-plane).
+La clave SSH (`${VM_SSH_KEYS}`) la resuelve `envsubst` al aplicar, desde
+`.envrc.private`.
 
 ```bash
 kubectl create namespace management
@@ -91,7 +86,7 @@ así que el controller de CAPI en tu `kind` local necesita un túnel hacia
 
 ```bash
 sudo sshuttle -r root@<IP_PUBLICA_INSTANCIA> \
-    -e "ssh -i $(tofu output -raw private_key_path 2>/dev/null || echo /path/a/tu/key.pem)" \
+    -e "ssh -i $(tofu -chdir=../00-lab output -raw private_key_path 2>/dev/null || echo /path/a/tu/key.pem)" \
     --method tproxy -l 0.0.0.0:0 10.77.100.0/24
 ```
 
@@ -202,13 +197,13 @@ kubectl --kubeconfig clusters/management/.kube/config create namespace tooling
 
 Antes de aplicar el cluster, crear el Secret con el token `capi-tooling`
 (sale de `tokens.yaml`, generado por
-`proxmox-terraform/01-users-and-privileges` — ver su README) que
+`01-proxmox-terraform` — ver su README) que
 `credentialsRef` referencia en el `ProxmoxCluster` de tooling. Sin esto,
 capmox intentaría crear las VMs de tooling con el token de management, que
 sus ACLs no lo permiten (aislamiento por pool, ver módulo 01):
 
 ```bash
-cat ../proxmox-terraform/01-users-and-privileges/tokens.yaml   # ver tooling.token_value
+cat ../01-proxmox-terraform/tokens.yaml   # ver tooling.token_value
 ```
 
 `token_value` viene como `<token_id>!capi=<secreto>` (todo junto — es como Proxmox
