@@ -44,3 +44,12 @@ ansible/inventory.yml
 # uv: venv del proyecto (se recrea con `direnv allow` / `uv sync`).
 # pyproject.toml y uv.lock SI se versionan.
 .venv/
+
+# Secretos generados localmente por cada asistente - nunca se comitean:
+# cada quien genera los suyos contra su propia instancia AWS.
+.envrc.private
+credentials.yaml
+tokens.yaml
+
+# kubeconfigs generados por kind/clusterctl
+.kube/

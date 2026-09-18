@@ -1,0 +1,43 @@
+# Este archivo mantiene los helm charts que se instalan con un plugin de
+# clusterapi llamado helm addon
+# https://github.com/kubernetes-sigs/cluster-api-addon-provider-helm/
+# Podés agregar los que sean necesarios. Dejamos solo el CNI.
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: cilium
+spec:
+  clusterSelector:
+    matchLabels:
+      baseHelmCharts: enabled
+  repoURL: https://helm.cilium.io/
+  chartName: cilium
+  namespace: kube-system
+  version: 1.17.5
+  options:
+    waitForJobs: true
+    wait: true
+    timeout: 5m
+    install:
+      createNamespace: true
+  valuesTemplate: |
+    hubble:
+      relay:
+        enabled: true
+      ui:
+        enabled: true
+    ipam:
+      operator:
+        clusterPoolIPv4PodCIDRList:
+          - 10.10.0.0/16
+    l2announcements:
+      enabled: true
+      leaseDuration: 10s
+      leaseRenewDeadline: 5s
+      leaseRetryPeriod: 1s
+    kubeProxyReplacement: true
+    k8sServiceHost: ${CONTROL_PLANE_ENDPOINT_IP}
+    k8sServicePort: 6443
+    k8sClientRateLimit.qps: ${QPS}
+    k8sClientRateLimit.burst: ${BURST}

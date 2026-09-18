@@ -15,6 +15,31 @@
         state: present
         update_cache: true
 
+    # Proxmox VE registra el nodo con el hostname vigente al momento de
+    # instalarse. Sin esto, quedaria el hostname dinamico que le pone
+    # cloud-init en AWS (variable por instancia), y ningun modulo de
+    # proxmox-terraform/ ni manifiesto de Cluster API podria referenciar
+    # el nodo con un nombre fijo.
+    - name: Fijar un hostname estable para el nodo Proxmox VE
+      ansible.builtin.hostname:
+        name: proxmox-lab
+
+    # proxmox-terraform/02-vm-template sube un snippet de cloud-init por
+    # SFTP (limitacion conocida del provider bpg: el API de Proxmox no
+    # soporta subir snippets via token, solo backups/ISOs/snippets via
+    # SSH) - por eso root necesita poder conectarse por SSH con la misma
+    # key que ya usa Terraform para "admin". PermitRootLogin por password
+    # sigue deshabilitado; solo se habilita por clave publica.
+    - name: Derivar la clave publica de la key pair que genero Terraform
+      ansible.builtin.set_fact:
+        _instance_public_key: "{{ lookup('ansible.builtin.pipe', 'ssh-keygen -y -f ' + ansible_ssh_private_key_file) }}"
+
+    - name: Autorizar esa misma clave tambien para conectarse como root
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ _instance_public_key }}"
+
   roles:
     - role: lae.proxmox
       vars:
@@ -49,6 +74,46 @@
         group: root
         mode: "0600"
       no_log: true
+
+    # La instancia EC2 solo trae una interfaz con IP publica - sin un
+    # bridge propio, capmox no tiene donde conectar la red de las VMs que
+    # crea (falla con "bridge 'vmbr0' does not exist" al arrancarlas).
+    # Se arma un bridge puramente virtual (sin interfaz fisica colgando)
+    # con NAT hacia la interfaz real, siguiendo la convencion de red ya
+    # usada en todo el resto del taller (10.77.100.0/24).
+    - name: Habilitar IP forwarding para el NAT de las VMs anidadas
+      ansible.builtin.copy:
+        content: "net.ipv4.ip_forward=1\n"
+        dest: /etc/sysctl.d/99-vmbr0-nat.conf
+        owner: root
+        group: root
+        mode: "0644"
+      register: _sysctl_vmbr0_nat
+
+    - name: Aplicar el sysctl si cambio
+      ansible.builtin.command: sysctl -p /etc/sysctl.d/99-vmbr0-nat.conf
+      when: _sysctl_vmbr0_nat.changed
+      changed_when: true
+
+    - name: Agregar el bridge vmbr0 con NAT para las VMs anidadas
+      ansible.builtin.blockinfile:
+        path: /etc/network/interfaces
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - vmbr0 NAT"
+        block: |
+          auto vmbr0
+          iface vmbr0 inet static
+              address 10.77.100.1/24
+              bridge-ports none
+              bridge-stp off
+              bridge-fd 0
+              post-up iptables -t nat -A POSTROUTING -s '10.77.100.0/24' -o {{ ansible_facts['default_ipv4']['interface'] }} -j MASQUERADE
+              post-down iptables -t nat -D POSTROUTING -s '10.77.100.0/24' -o {{ ansible_facts['default_ipv4']['interface'] }} -j MASQUERADE
+      register: _vmbr0_interfaces_conf
+
+    - name: Levantar vmbr0 sin reiniciar el nodo (ifupdown2)
+      ansible.builtin.command: ifreload -a
+      when: _vmbr0_interfaces_conf.changed
+      changed_when: true
 
   post_tasks:
     - name: Mostrar como acceder
