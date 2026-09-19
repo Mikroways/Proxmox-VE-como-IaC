@@ -1,3 +1,34 @@
+
+resource "proxmox_virtual_environment_role" "imagebuilder" {
+  role_id = "imagebuilder-role"
+  privileges = [
+    "Datastore.Allocate",
+    "Datastore.AllocateSpace",
+    "Datastore.AllocateTemplate",
+    "Datastore.Audit",
+    "SDN.Allocate",
+    "SDN.Audit",
+    "SDN.Use",
+    "Sys.AccessNetwork",
+    "Sys.Audit",
+    "VM.Allocate",
+    "VM.Audit",
+    "VM.Clone",
+    "VM.Config.CDROM",
+    "VM.Config.Cloudinit",
+    "VM.Config.CPU",
+    "VM.Config.Disk",
+    "VM.Config.HWType",
+    "VM.Config.Memory",
+    "VM.Config.Network",
+    "VM.Config.Options",
+    "VM.Migrate",
+    "VM.Monitor",
+    "VM.Console",
+    "VM.PowerMgmt"
+  ]
+}
+
 resource "proxmox_virtual_environment_role" "iac" {
   role_id = "terraform-role"
 

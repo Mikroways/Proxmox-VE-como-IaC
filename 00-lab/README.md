@@ -102,6 +102,12 @@ en [`ansible/README.md`](ansible/README.md).
 
 ## Conectarse
 
+Los outputs de este módulo (`instance_public_ip`, `proxmox_root_password_command`)
+son los que el `.envrc` de la raíz recalcula solo como `PROXMOX_HOST_IP`/
+`PROXMOX_URL`/`PROXMOX_VE_PASSWORD` para `01-proxmox-terraform`,
+`02-vm-template`, `03-image-builder` y `04-clusterctl` — no hace falta copiarlos a mano a
+ningún lado.
+
 ```bash
 # Tofu ya deja el comando armado:
 tofu output -raw ssh_command
