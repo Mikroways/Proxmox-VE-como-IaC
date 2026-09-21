@@ -1,0 +1,5 @@
+PROXMOX_BRIDGE=vmbr0
+PROXMOX_NODE=proxmox-lab
+PROXMOX_STORAGE_POOL=local
+PROXMOX_ISO_POOL=local
+PACKER_FLAGS=-var 'kubernetes_rpm_version=1.36.3' -var 'kubernetes_semver=v1.36.3' -var 'kubernetes_series=${K8S_VERSION}' -var 'kubernetes_deb_version=1.36.3-1.1' -var disk_format=qcow2 -var 'cpu_type=host' -var 'iso_url=https://mirrors.edge.kernel.org/ubuntu-releases/24.04.3/ubuntu-24.04.3-live-server-amd64.iso'

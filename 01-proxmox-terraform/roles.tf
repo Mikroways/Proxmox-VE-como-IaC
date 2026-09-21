@@ -1,33 +1,3 @@
-
-resource "proxmox_virtual_environment_role" "imagebuilder" {
-  role_id = "imagebuilder-role"
-  privileges = [
-    "Datastore.Allocate",
-    "Datastore.AllocateSpace",
-    "Datastore.AllocateTemplate",
-    "Datastore.Audit",
-    "SDN.Allocate",
-    "SDN.Audit",
-    "SDN.Use",
-    "Sys.AccessNetwork",
-    "Sys.Audit",
-    "VM.Allocate",
-    "VM.Audit",
-    "VM.Clone",
-    "VM.Config.CDROM",
-    "VM.Config.Cloudinit",
-    "VM.Config.CPU",
-    "VM.Config.Disk",
-    "VM.Config.HWType",
-    "VM.Config.Memory",
-    "VM.Config.Network",
-    "VM.Config.Options",
-    "VM.Migrate",
-    "VM.Console",
-    "VM.PowerMgmt"
-  ]
-}
-
 resource "proxmox_virtual_environment_role" "iac" {
   role_id = "terraform-role"
 
@@ -75,5 +45,44 @@ resource "proxmox_virtual_environment_role" "k8s-csi-vm" {
     "VM.Audit",
     "VM.Config.Disk",
     "VM.Allocate",
+  ]
+}
+
+resource "proxmox_virtual_environment_role" "imagebuilder" {
+  role_id = "imagebuilder"
+
+  privileges = [
+    "Datastore.Allocate",
+    "Datastore.AllocateSpace",
+    "Datastore.AllocateTemplate",
+    "Datastore.Audit",
+    "Pool.Allocate",
+    "SDN.Audit",
+    "SDN.Use",
+    "Sys.AccessNetwork",
+    "Sys.Audit",
+    "VM.Allocate",
+    "VM.Audit",
+    "VM.Backup",
+    "VM.Clone",
+    "VM.Config.CDROM",
+    "VM.Config.CPU",
+    "VM.Config.Cloudinit",
+    "VM.Config.Disk",
+    "VM.Config.HWType",
+    "VM.Config.Memory",
+    "VM.Config.Network",
+    "VM.Config.Options",
+    "VM.Console",
+    "VM.GuestAgent.Audit",
+    "VM.GuestAgent.FileRead",
+    "VM.GuestAgent.FileSystemMgmt",
+    "VM.GuestAgent.FileWrite",
+    "VM.GuestAgent.Unrestricted",
+    "VM.Migrate",
+    "VM.PowerMgmt",
+    "VM.Replicate",
+    "VM.Snapshot",
+    "VM.Snapshot.Rollback",
   ]
 }

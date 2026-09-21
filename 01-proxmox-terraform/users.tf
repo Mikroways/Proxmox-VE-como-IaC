@@ -123,3 +123,32 @@ resource "proxmox_virtual_environment_acl" "k8s-csi_token_permission-vm" {
   path      = "/pool"
   propagate = true
 }
+
+################################################################################
+# image-builder user and token
+################################################################################
+resource "proxmox_virtual_environment_user" "imagebuilder" {
+  acl {
+    path      = "/"
+    propagate = true
+    role_id   = proxmox_virtual_environment_role.imagebuilder.role_id
+  }
+
+  comment  = "image-builder (Packer) user for baking VM templates"
+  user_id  = local.credentials.users.imagebuilder.username
+  password = local.credentials.users.imagebuilder.password
+}
+
+resource "proxmox_virtual_environment_user_token" "imagebuilder_token" {
+  comment    = "image-builder API token"
+  token_name = "imagebuilder"
+  user_id    = proxmox_virtual_environment_user.imagebuilder.user_id
+}
+
+resource "proxmox_virtual_environment_acl" "imagebuilder_token" {
+  token_id = proxmox_virtual_environment_user_token.imagebuilder_token.id
+
+  path      = "/"
+  propagate = true
+  role_id   = proxmox_virtual_environment_role.imagebuilder.role_id
+}
