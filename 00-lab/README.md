@@ -106,10 +106,26 @@ en [`ansible/README.md`](ansible/README.md).
 ## Conectarse
 
 Los outputs de este módulo (`instance_public_ip`, `proxmox_root_password_command`)
-son los que el `.envrc` de la raíz recalcula solo como `PROXMOX_HOST_IP`/
-`PROXMOX_URL`/`PROXMOX_VE_PASSWORD` para `01-proxmox-terraform`,
-`02-vm-template`, `03-image-builder` y `04-clusterctl` — no hace falta copiarlos a mano a
-ningún lado.
+son los que alimentan `PROXMOX_HOST_IP`/`PROXMOX_VE_PASSWORD`, que consumen
+`01-proxmox-terraform`, `02-vm-template`, `03-cluster-api` y `04-image-builder`
+vía el `.envrc` de la raíz. **Ya no se recalculan solos** en cada `direnv
+allow` — se probó y era lento/colgaba (un `tofu output` + un `ssh` en vivo
+contra la instancia en cada entrada a cualquier directorio del taller): ahora
+se pegan una vez en `.envrc.private` de la raíz (gitignoreado) y el `.envrc`
+solo valida que ya estén seteados (`env_vars_required`). Repetí estos dos
+comandos y actualizá `.envrc.private` cada vez que la instancia se reemplace
+(cambia de IP) o el playbook regenere el password:
+
+```bash
+tofu output -raw instance_public_ip
+tofu output -raw proxmox_root_password_command | sh
+```
+
+```bash
+# .envrc.private, en la raíz del repo (gitignoreado):
+export PROXMOX_HOST_IP="<primer comando de arriba>"
+export PROXMOX_VE_PASSWORD="<segundo comando de arriba>"
+```
 
 ```bash
 # Tofu ya deja el comando armado:

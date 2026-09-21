@@ -9,9 +9,9 @@ A diferencia del PoC original (que usaba Packer + `kubernetes-sigs/image-builder
 para hornear un template con kubeadm/kubelet ya instalados), acá el template
 es genérico — kubeadm/kubelet/containerd se instalan **en el boot de cada
 VM real**, vía `preKubeadmCommands` (ver
-[`../04-clusterctl/cluster.yaml.sample`](../04-clusterctl/cluster.yaml.sample)).
+[`../03-cluster-api/cluster.yaml.sample`](../03-cluster-api/cluster.yaml.sample)).
 Ventaja: cambiar la versión de k8s no requiere reconstruir ningún template,
-solo editar el manifiesto de `04-clusterctl/`. `../03-image-builder/` ofrece
+solo editar el manifiesto de `03-cluster-api/`. `../04-image-builder/` ofrece
 un camino alternativo: hornear esos mismos pasos en el template.
 
 ## Qué crea
@@ -59,4 +59,4 @@ tofu apply
 
 Un **template** `ubuntu-2404-k8s-base` en el nodo `proxmox-lab`, con tag
 `ubuntu-24.04` — es lo que usa `templateSelector.matchTags` en
-`../04-clusterctl/cluster.yaml.sample`.
+`../03-cluster-api/cluster.yaml.sample`.

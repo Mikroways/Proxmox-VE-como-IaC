@@ -7,10 +7,14 @@ tokens, pools y ACLs necesarios para trabajar después con Cluster API
 
 ## Qué crea
 
-- **Roles**: `terraform-role`, `k8s-csi-datastore`, `k8s-csi-vm`.
+- **Roles**: `terraform-role`, `k8s-csi-datastore`, `k8s-csi-vm`, `imagebuilder`
+  (este último con privilegios amplios sobre `/` — `Datastore.*`, `SDN.*`,
+  `VM.*` — que es lo que pide `kubernetes-sigs/image-builder` para poder
+  crear y convertir VMs en template).
 - **Usuarios** (todos con token API): `terraform@pve`, `capi-management@pve`
   / `capi-tooling@pve` (uno por cada entrada de `capi_clusters`),
-  `k8s-pve-exporter@pve` (solo `PVEAuditor`), `k8s-csi@pve`.
+  `k8s-pve-exporter@pve` (solo `PVEAuditor`), `k8s-csi@pve`,
+  `imagebuilder@pve` (lo consume `../04-image-builder`).
 - **Pools**: `capi-management-vm`, `capi-tooling-vm` (uno por cada cluster, VMs
   aisladas entre clusters), `capi-template` (compartido, solo templates —
   lo usa `../02-vm-template`).
@@ -23,9 +27,11 @@ tokens, pools y ACLs necesarios para trabajar después con Cluster API
   - Si no se cuenta con un proxmox, se puede usar el planteado en `00-lab/`
 - Toolchain de la raíz del repo (`opentofu`, `direnv`) — ver
   `.tool-versions`.
-- `direnv allow` corrido en la raíz del repo: las credenciales `root@pam`
-  contra la instancia (`PROXMOX_VE_USERNAME`/`PROXMOX_VE_PASSWORD`) ya se
-  calculan solas desde `lab/.envrc` — no hay que setear nada a mano.
+- `direnv allow` corrido en la raíz del repo, con `PROXMOX_HOST_IP`/
+  `PROXMOX_VE_PASSWORD` ya cargados en `.envrc.private` (ver
+  "Conectarse" en `00-lab/README.md`) — `PROXMOX_VE_USERNAME`
+  (`root@pam`) y el resto de las variables de conexión (`PROXMOX_VE_ENDPOINT`,
+  `PROXMOX_VE_INSECURE`) salen solas de ahí.
 
 ## Antes de empezar
 
@@ -62,8 +68,10 @@ tofu apply
 Genera `tokens.yaml` (gitignoreado, nunca se commitea) con un token de API
 por usuario. De estos:
 
-- `capi-management` y `capi-tooling` los consume `../04-clusterctl/` (uno
+- `capi-management` y `capi-tooling` los consume `../03-cluster-api/` (uno
   por `ProxmoxCluster`, para aislar permisos entre clusters).
+- `imagebuilder` lo consume `../04-image-builder/` (pegado a mano en su
+  propio `.envrc.private`, ver el README de ese directorio).
 - `k8s-csi` y `pve_exporter` quedan generados y disponibles para cuando se
   instale el CSI driver o el exporter de Proxmox — está fuera del alcance
   de este repo.

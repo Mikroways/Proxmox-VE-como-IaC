@@ -1,9 +1,16 @@
 # Instalación de un cluster con clusterctl
 
-Paso 3 (último) del taller. `clusterctl` define un flujo de vida completo
+Paso 3 del taller: el último necesario para tener un cluster de Kubernetes
+real corriendo sobre Proxmox. `clusterctl` define un flujo de vida completo
 para clusters de Kubernetes: crear un cluster efímero (kind), instalar ahí
 los controladores necesarios para un hipervisor/cloud dado, y desde ese
 cluster inicializar clusters reales a partir de manifiestos.
+
+> `../04-image-builder/` (número de directorio más alto, pero **no** un
+> paso posterior a este) es una alternativa opcional a `../02-vm-template/`
+> para el template que se clona acá — si la usás en vez de `02-vm-template`,
+> actualizá `templateSelector.matchTags` en `cluster.yaml.sample` con el tag
+> que haya quedado en ese template.
 
 ## Qué crea
 
