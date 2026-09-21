@@ -83,7 +83,7 @@ clusterctl init --infrastructure proxmox --addon helm --ipam in-cluster
 ## Generate
 
 ```bash
-cp cluster.yaml.sample cluster.yaml
+envsubst < cluster.yaml.sample > cluster.yaml
 ```
 
 Ya tiene todos los ajustes de este entorno (pool, storage,
@@ -92,8 +92,7 @@ La clave SSH (`${VM_SSH_KEYS}`) la resuelve `envsubst` al aplicar, desde
 `.envrc.private`.
 
 ```bash
-kubectl create namespace management
-envsubst < cluster.yaml | kubectl apply -f -
+kubectl apply -f cluster.yaml
 ```
 
 ## Seguimiento
@@ -111,7 +110,7 @@ así que el controller de CAPI en tu `kind` local necesita un túnel hacia
 `10.77.100.0/24` a través de la instancia EC2.
 
 ```bash
-sudo sshuttle -r root@$PROXMOX_HOST_IP --method tproxy -l 0.0.0.0:0 10.77.100.0/24
+sshuttle -r root@$PROXMOX_HOST_IP -e 'ssh -i ../00-lab/proxmox-over-ec2-key.pem' -l 0.0.0.0:0 10.77.100.0/24
 ```
 
 - **`--method tproxy`, no el default (`nat`)**: el método `nat` redirige el
@@ -145,7 +144,8 @@ Los nodos van a verse **Not Ready** hasta instalar un CNI (siguiente paso).
 ## Instalando el CNI
 
 ```bash
-envsubst < helm-chart-proxies.yaml | kubectl apply -f -
+envsubst < helm-chart-proxies.yaml.sample > helm-chart-proxies.yaml
+kubectl apply -f helm-chart-proxies.yaml
 ```
 
 > Se aplica en el cluster **kind**, no en el cluster de Proxmox — el addon de
@@ -254,7 +254,7 @@ EOF
 Con el namespace y el Secret ya creados, aplicamos el cluster y los charts:
 
 ```bash
-envsubst < clusters/management/cluster-tooling.yaml | kubectl --kubeconfig clusters/management/.kube/config apply -f -
+envsubst '$VM_SSH_KEYS' < clusters/management/cluster-tooling.yaml | kubectl --kubeconfig clusters/management/.kube/config apply -f -
 envsubst < clusters/management/helm-chart-proxies.yaml | kubectl --kubeconfig clusters/management/.kube/config apply -f -
 ```
 

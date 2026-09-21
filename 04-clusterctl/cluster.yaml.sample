@@ -1,3 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: management
+---
 apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
@@ -40,6 +45,9 @@ spec:
     prefix: 24
   allowedNodes:
   - proxmox-lab
+  credentialsRef:
+    name: capmox-manager-credentials
+    namespace: capmox-system
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane
@@ -75,15 +83,15 @@ spec:
         systemctl enable --now qemu-guest-agent
 
         install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL "https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/Release.key" | \
+        curl -fsSL "https://pkgs.k8s.io/core:/stable:/v$${KUBERNETES_VERSION_SERIES}/deb/Release.key" | \
           gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
         chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/ /" \
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$${KUBERNETES_VERSION_SERIES}/deb/ /" \
           > /etc/apt/sources.list.d/kubernetes.list
 
         apt-get update
-        apt-get install -y "kubelet=${KUBERNETES_VERSION}-*" "kubeadm=${KUBERNETES_VERSION}-*" "kubectl=${KUBERNETES_VERSION}-*" containerd
+        apt-get install -y "kubelet=$${KUBERNETES_VERSION}-*" "kubeadm=$${KUBERNETES_VERSION}-*" "kubectl=$${KUBERNETES_VERSION}-*" containerd
         apt-mark hold kubelet kubeadm kubectl
 
         mkdir -p /etc/containerd
