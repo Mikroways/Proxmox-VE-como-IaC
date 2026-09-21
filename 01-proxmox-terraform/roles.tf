@@ -23,7 +23,6 @@ resource "proxmox_virtual_environment_role" "imagebuilder" {
     "VM.Config.Network",
     "VM.Config.Options",
     "VM.Migrate",
-    "VM.Monitor",
     "VM.Console",
     "VM.PowerMgmt"
   ]
