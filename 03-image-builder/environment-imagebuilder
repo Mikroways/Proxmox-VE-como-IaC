@@ -1,6 +1,0 @@
-PROXMOX_BRIDGE=vmbr0
-PROXMOX_VLAN=1240
-PROXMOX_NODE=pve1
-PROXMOX_STORAGE_POOL=k8s-nas
-PROXMOX_ISO_POOL=k8s-nas
-PACKER_FLAGS=-var 'kubernetes_rpm_version=1.32.8' -var 'kubernetes_semver=v1.32.8' -var 'kubernetes_series=v1.32' -var 'kubernetes_deb_version=1.32.8-1.1' -var disk_format=qcow2 -var 'cpu_type=host'

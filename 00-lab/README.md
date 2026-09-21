@@ -84,7 +84,10 @@ curl -s https://checkip.amazonaws.com   # para saber tu IP publica
 $EDITOR terraform.tfvars
 
 # 4. Init / plan / apply (esto ya deja armado ansible/inventory.yml)
-tofu init
+tofu init \
+  -backend-config="bucket=<BUCKET_NAME>" \
+  -backend-config="key=00-lab.tfstate" \
+  -backend-config="region=us-east-1"
 tofu plan
 tofu apply
 

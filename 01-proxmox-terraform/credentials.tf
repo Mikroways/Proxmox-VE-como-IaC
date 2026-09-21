@@ -18,6 +18,13 @@ resource "local_sensitive_file" "clusterapi_token" {
         token_id    = proxmox_virtual_environment_user_token.pve_exporter_token.user_id
         token_value = proxmox_virtual_environment_user_token.pve_exporter_token.value
       }
-  }))
+    },
+    {
+      imagebuilder = {
+        token_id    = proxmox_virtual_environment_user_token.imagebuilder_token.user_id
+        token_value = proxmox_virtual_environment_user_token.imagebuilder_token.value
+      }
+    }
+  ))
   filename = "${path.module}/${local.tokens_file}"
 }

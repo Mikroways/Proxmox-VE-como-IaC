@@ -49,7 +49,10 @@ tokens, pools y ACLs necesarios para trabajar después con Cluster API
 ## Uso
 
 ```bash
-tofu init
+tofu init \
+  -backend-config="bucket=<BUCKET_NAME>" \
+  -backend-config="key=01-proxmox-terraform.tfstate" \
+  -backend-config="region=us-east-1"
 tofu plan
 tofu apply
 ```

@@ -16,3 +16,4 @@ docker run --rm -it ubuntu:24.04 bash -c "apt-get update && \
       | tee /etc/apt/sources.list.d/kubernetes.list && apt-get update && \
       apt list -a kubeadm"
 
+

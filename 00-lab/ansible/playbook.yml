@@ -115,6 +115,54 @@
       when: _vmbr0_interfaces_conf.changed
       changed_when: true
 
+    # image-builder (Packer) necesita DHCP para la VM de build - el plugin
+    # de Packer para Proxmox no soporta IP estatica (confirmado contra la
+    # doc oficial y el codigo del builder). El resto de esta red usa IPs
+    # estaticas a proposito, asi que el rango de DHCP se acota para no
+    # chocar con nada: gateway .1, VIPs .2/.3, nodos .10-.50, LB .200-.220.
+    - name: Instalar dnsmasq (DHCP para la VM de build de image-builder)
+      ansible.builtin.apt:
+        name: dnsmasq
+        state: present
+        update_cache: true
+
+    - name: Deshabilitar dnsmasq como resolver systemd-resolved (solo lo usamos para DHCP)
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: started
+        enabled: true
+
+    - name: Configurar dnsmasq - solo DHCP en vmbr0, sin DNS
+      ansible.builtin.copy:
+        dest: /etc/dnsmasq.d/vmbr0-image-builder.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Generado por Ansible (playbook.yml) - DHCP solo para la VM de
+          # build de image-builder/Packer, acotado para no chocar con las
+          # IPs estaticas del resto de la red (ver 04-image-builder/README.md).
+          port=0
+          interface=vmbr0
+          bind-interfaces
+          dhcp-range=10.77.100.100,10.77.100.150,12h
+          dhcp-option=3,10.77.100.1
+          dhcp-option=6,1.1.1.1
+      register: _dnsmasq_conf
+
+    - name: Reiniciar dnsmasq si cambio la config
+      ansible.builtin.systemd:
+        name: dnsmasq
+        state: restarted
+        enabled: true
+      when: _dnsmasq_conf.changed
+
+    - name: Asegurar que dnsmasq este arriba
+      ansible.builtin.systemd:
+        name: dnsmasq
+        state: started
+        enabled: true
+
   post_tasks:
     - name: Mostrar como acceder
       ansible.builtin.debug:
