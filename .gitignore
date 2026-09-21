@@ -49,6 +49,7 @@ terraform.rc
 # Secretos generados localmente por cada asistente - nunca se comitean:
 # cada quien genera los suyos contra su propia instancia AWS.
 .envrc.private
+.envrc.profiles
 credentials.yaml
 tokens.yaml
 

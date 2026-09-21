@@ -61,10 +61,6 @@ EOF
 clusterctl generate provider -i proxmox --raw | grep image
 ```
 
-Confirmar que la imagen sea la oficial de `ionos-cloud` (no de un fork —
-este taller no depende de ningún fork, a diferencia del PoC original en el
-que se basó).
-
 ## Credenciales
 
 Antes de `clusterctl init`, este directorio necesita el token `capi-management`
@@ -115,9 +111,7 @@ así que el controller de CAPI en tu `kind` local necesita un túnel hacia
 `10.77.100.0/24` a través de la instancia EC2.
 
 ```bash
-sudo sshuttle -r root@<IP_PUBLICA_INSTANCIA> \
-    -e "ssh -i $(tofu -chdir=../00-lab output -raw private_key_path 2>/dev/null || echo /path/a/tu/key.pem)" \
-    --method tproxy -l 0.0.0.0:0 10.77.100.0/24
+sudo sshuttle -r root@$PROXMOX_HOST_IP --method tproxy -l 0.0.0.0:0 10.77.100.0/24
 ```
 
 - **`--method tproxy`, no el default (`nat`)**: el método `nat` redirige el

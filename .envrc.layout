@@ -1,0 +1,27 @@
+# direnv no trae "layout uv" en su stdlib todavia (es una funcion
+# community, propuesta para el core pero no mergeada) - la definimos ac
+# mismo en vez de pedir que cada quien la agregue a su
+# ~/.config/direnv/direnvrc global, asi el repo funciona solo con
+# `direnv allow`. Fuente: https://github.com/direnv/direnv/wiki/Python#uv
+layout_uv() {
+  watch_file .python-version pyproject.toml uv.lock
+
+  if ! has uv; then
+    log_error "uv: command not found. Instalar desde https://docs.astral.sh/uv/"
+    return 1
+  fi
+
+  if [[ ! -f pyproject.toml ]]; then
+    log_error "uv: no se encontro pyproject.toml"
+    return 1
+  fi
+
+  local venv_path
+  venv_path="$(expand_path "${UV_PROJECT_ENVIRONMENT:-.venv}")"
+  export UV_PROJECT_ENVIRONMENT="$venv_path"
+
+  uv sync --frozen
+
+  export VIRTUAL_ENV="$venv_path"
+  PATH_add "$venv_path/bin"
+}
