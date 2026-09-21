@@ -84,10 +84,8 @@ fi
 
 # envsubst expande "${K8S_VERSION}" (definida en .envrc) dentro del archivo
 # antes de que Docker lo lea - --env-file por si solo no interpola nada.
-# Restringido a esa unica variable (envsubst '$K8S_VERSION') para no tocar
-# ningun otro "$" que pueda aparecer en el archivo.
 docker run -it --rm --net=host \
-    --env-file <(envsubst '$K8S_VERSION' < "$IMAGE_BUILDER_ENV_FILE") \
+    --env-file <(envsubst '$K8S_VERSION $K8S_RPM_VERSION $K8S_SERMVER $K8S_DEB_VERSION' < "$IMAGE_BUILDER_ENV_FILE") \
     -e PROXMOX_URL \
     -e PROXMOX_USERNAME \
     -e PROXMOX_TOKEN \
