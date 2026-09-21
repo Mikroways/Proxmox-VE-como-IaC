@@ -38,7 +38,7 @@ un camino alternativo: hornear esos mismos pasos en el template.
 El provider de Terraform necesita subir un snippet de cloud-init (el
 `vendor-data` con la instalación de `qemu-guest-agent`) directamente al
 nodo — el API de Proxmox no soporta subir este tipo de archivo vía token,
-solo por SFTP. El playbook de Ansible del Paso 0 ya dejó la key pair de la
+solo por SSH. El playbook de Ansible del Paso 0 ya dejó la key pair de la
 instancia autorizada también para `root` (ver `00-lab/ansible/playbook.yml`).
 Antes de aplicar, cargar esa key en el agente SSH:
 

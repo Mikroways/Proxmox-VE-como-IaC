@@ -43,10 +43,10 @@ tokens, pools y ACLs necesarios para trabajar después con Cluster API
    cp credentials.yaml.sample credentials.yaml
    ```
 
-   `credentials.yaml` queda gitignoreado — nunca se commitea con valores
+   `credentials.yaml` queda agregado en el gitignore — nunca se commitea con valores
    reales.
 
-2. Copiar `terraform.tfvars.example` a `terraform.tfvars` (gitignoreado):
+2. Copiar `terraform.tfvars.example` a `terraform.tfvars` (agregado en el gitignore):
 
    ```bash
    cp terraform.tfvars.example terraform.tfvars
@@ -65,7 +65,7 @@ tofu apply
 
 ## Qué deja
 
-Genera `tokens.yaml` (gitignoreado, nunca se commitea) con un token de API
+Genera `tokens.yaml` (agregado en el gitignore, nunca se commitea) con un token de API
 por usuario. De estos:
 
 - `capi-management` y `capi-tooling` los consume `../03-cluster-api/` (uno

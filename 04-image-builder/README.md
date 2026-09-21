@@ -52,7 +52,7 @@ en `00-lab/README.md` y `02-vm-template/README.md`).
   `tokens.yaml` (rol dedicado con privilegios amplios: `Datastore.*`, `SDN.*`,
   `Sys.AccessNetwork`, `VM.*` sobre `/`, muy por encima de lo que necesita
   `terraform-role` o los tokens de CAPI/CSI).
-- `.envrc.private` de este directorio (gitignoreado) con el token ya
+- `.envrc.private` de este directorio (agregado en el gitignore) con el token ya
   partido en sus dos partes:
 
   ```bash
@@ -61,7 +61,7 @@ en `00-lab/README.md` y `02-vm-template/README.md`).
   export PROXMOX_TOKEN="<secreto>"                          # despues del "="
   ```
 
-- **Red con DHCP para la VM temporal del build** — el gotcha más importante
+- **Red con DHCP para la VM temporal del build** — el punto más importante
   de este entorno en particular: el builder levanta una VM intermedia que
   necesita una IP por DHCP en el bridge indicado (`PROXMOX_BRIDGE` en
   `environment-imagebuilder`, `vmbr0` acá). La red nested de este taller

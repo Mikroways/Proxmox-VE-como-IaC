@@ -44,21 +44,7 @@ Todo con `default_tags` (`Repository`, `Managed-By`, `Environment`) y
 [`iam/minimal-policy.json`](iam/minimal-policy.json) es una policy de IAM
 lista para usar.
 
-**Lo que NO necesita, y por qué vale la pena decirlo**:
-- **Nada de `iam:*`**: el módulo de EC2 puede crear un IAM instance
-  profile propio, pero acá está desactivado (`create_iam_instance_profile`
-  nunca se pisa, default `false`). Nadie que corra este repo necesita
-  poder tocar IAM.
-
-**Alcance de `Resource`**: casi todas las acciones de EC2 usadas acá
-(`Describe*`, `Create*`, `Authorize*Ingress/Egress`) no soportan scoping
-a nivel de resource de forma útil — es una limitación conocida de la API
-de EC2, no una decisión de diseño — así que la policy usa `"Resource":
-"*"` en los statements de EC2. Si en algún momento se quiere endurecer
-más, `ec2:RunInstances` sí admite condiciones por ARN de subnet/AMI/SG/key-pair,
-pero agrega bastante complejidad para lo que vale un repo de lab.
-
-**Límite honesto de este método**: es un análisis estático contra las
+**Límite de la política**: es un análisis estático contra las
 versiones de módulo pineadas hoy — si se bumpean las versiones en
 `versions.tf`, el set de recursos puede cambiar y la policy debería
 recalcularse. Para una verificación 100% empírica (capturar las llamadas
@@ -92,8 +78,8 @@ tofu plan
 tofu apply
 
 # 5. Instalar Proxmox VE sobre la instancia ya creada
-ansible-galaxy install -r ansible/requirements.yml --force
-ansible-playbook -i ansible/inventory.yml ansible/playbook.yml
+uv run ansible-galaxy install -r ansible/requirements.yml --force
+uv run  ansible-playbook -i ansible/inventory.yml ansible/playbook.yml
 ```
 
 Sin `direnv` (o si todavía no corriste `direnv allow`), el paso 5 necesita
@@ -108,31 +94,19 @@ en [`ansible/README.md`](ansible/README.md).
 Los outputs de este módulo (`instance_public_ip`, `proxmox_root_password_command`)
 son los que alimentan `PROXMOX_HOST_IP`/`PROXMOX_VE_PASSWORD`, que consumen
 `01-proxmox-terraform`, `02-vm-template`, `03-cluster-api` y `04-image-builder`
-vía el `.envrc` de la raíz. **Ya no se recalculan solos** en cada `direnv
-allow` — se probó y era lento/colgaba (un `tofu output` + un `ssh` en vivo
-contra la instancia en cada entrada a cualquier directorio del taller): ahora
-se pegan una vez en `.envrc.private` de la raíz (gitignoreado) y el `.envrc`
-solo valida que ya estén seteados (`env_vars_required`). Repetí estos dos
-comandos y actualizá `.envrc.private` cada vez que la instancia se reemplace
-(cambia de IP) o el playbook regenere el password:
+vía el `.envrc` de la raíz.
 
 ```bash
+# PROXMOX_HOST_IP
 tofu output -raw instance_public_ip
-tofu output -raw proxmox_root_password_command | sh
+# PROXMOX_VE_PASSWORD
+ssh -i ./proxmox-over-ec2-key.pem admin@$(tofu output -raw instance_public_ip) sudo cat /root/.proxmox-root-password
 ```
 
 ```bash
-# .envrc.private, en la raíz del repo (gitignoreado):
+# .envrc.private, en la raíz del repo (agregado en el gitignore):
 export PROXMOX_HOST_IP="<primer comando de arriba>"
 export PROXMOX_VE_PASSWORD="<segundo comando de arriba>"
-```
-
-```bash
-# Tofu ya deja el comando armado:
-tofu output -raw ssh_command
-
-# equivalente a:
-ssh -i proxmox-over-ec2-key.pem admin@<ip-publica>
 ```
 
 Una vez corrido el playbook, la UI de Proxmox queda en:
@@ -143,30 +117,23 @@ tofu output -raw proxmox_ui_url
 
 La UI autentica `root` vía PAM con **password**, no con la key SSH. El
 playbook genera uno random y lo deja en `/root/.proxmox-root-password`
-(chmod 600) — recuperalo con:
-
-```bash
-tofu output -raw proxmox_root_password_command | sh
-```
+(chmod 600). La misma se puede recuperar de la variable `PROXMOX_VE_PASSWORD`
+definida unos pasos antes.
 
 ## Notas de seguridad
 
 - La clave privada generada (`proxmox-over-ec2-key.pem`) queda en disco con
-  permisos `0600` y **también en el `terraform.tfstate` en texto plano**
-  (limitación del approach "Terraform genera la clave"). Para un lab con
-  state local es un trade-off aceptable; si en algún momento se migra a
-  backend remoto compartido, cifrar el backend (S3 + KMS, por ejemplo) o
+  permisos `0600` y **también en el `terraform.tfstate` en texto plano**.
+  Para un lab con state local es un trade-off aceptable; si en algún momento se
+  migra a backend remoto compartido, cifrar el backend (S3 + KMS, por ejemplo) o
   cambiar a `create_private_key = false` y traer una clave pública propia.
-- `allowed_cidr_blocks` no tiene default: el `plan` falla si no lo
-  definís, para evitar abrir el SG a `0.0.0.0/0` por accidente.
 - `terraform.tfvars` y los `.pem` están en `.gitignore`: no se versionan.
 - El password de root de Proxmox generado por `ansible/playbook.yml`
   queda en texto plano en `/root/.proxmox-root-password` dentro de la
   instancia (solo legible por root). No sale del disco ni se registra en
   el tfstate — para leerlo hace falta acceso SSH.
 - `ansible/requirements.yml` pinea el role `lae.proxmox` a un tag fijo:
-  es community (no oficial de Proxmox), así que no seguimos su rama
-  principal a ciegas.
+  es community (no oficial de Proxmox).
 
 ## Costo
 

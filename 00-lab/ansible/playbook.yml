@@ -25,7 +25,7 @@
         name: proxmox-lab
 
     # proxmox-terraform/02-vm-template sube un snippet de cloud-init por
-    # SFTP (limitacion conocida del provider bpg: el API de Proxmox no
+    # SSH (limitacion conocida del provider bpg: el API de Proxmox no
     # soporta subir snippets via token, solo backups/ISOs/snippets via
     # SSH) - por eso root necesita poder conectarse por SSH con la misma
     # key que ya usa Terraform para "admin". PermitRootLogin por password

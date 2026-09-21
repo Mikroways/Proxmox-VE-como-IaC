@@ -17,7 +17,7 @@ provider "proxmox" {
   #   PROXMOX_VE_INSECURE
   #   PROXMOX_VE_TMPDIR
   #
-  # El snippet de cloud-init (vendor-data) se sube por SFTP, no por API -
+  # El snippet de cloud-init (vendor-data) se sube por SCP, no por API -
   # limitacion conocida del provider bpg para este content_type - por eso
   # hace falta tambien una conexion SSH como root al nodo (ver README.md).
   ssh {

@@ -83,14 +83,17 @@ en [`04-image-builder/README.md`](04-image-builder/README.md)).
 
   `PROXMOX_HOST_IP`/`PROXMOX_VE_PASSWORD` no se recalculan solos (ver
   ["Conectarse" en `00-lab/README.md`](00-lab/README.md#conectarse) — hay
-  que pegarlos una vez en el `.envrc.private` de la raíz, gitignoreado).
-- Un bucket de S3 ya existente para el state remoto de `00-lab` y
+  que pegarlos una vez en el `.envrc.private` de la raíz, agregado en el gitignore).
+- (Opcional) Un bucket de S3 ya existente para el state remoto de `00-lab` y
   `01-proxmox-terraform` (ver [`backend.tf`](00-lab/backend.tf) en cada uno
-  y "Cómo arrancar" más abajo) — no lo crea este repo.
-- Credenciales de AWS (solo para el paso 0) con permisos para crear VPC, EC2,
-  key pair y Security Group — ver [política mínima](00-lab/README.md#política-mínima-para-ejecutar-la-receta).
+  y "Cómo arrancar" más abajo) — no lo crea este repo. Se puede optar por contar
+  con estados locales, entendiendo que debe encriptarse, ya que se crean datos
+  sensibles.
+- (Opcioanl) Credenciales de AWS (solo para el paso 0) con permisos para crear
+  VPC, EC2, key pair y Security Group — ver [política mínima](00-lab/README.md#política-mínima-para-ejecutar-la-receta).
+  Se puede optar por un Proxmox propio.
 - Un agente SSH corriendo, para el paso 2 (sube un snippet de cloud-init por
-  SFTP a Proxmox) y para el túnel de red del paso 3.
+  SSH a Proxmox) y para el túnel de red del paso 3.
 - Solo si vas a usar `04-image-builder` en vez de `02-vm-template`: Docker
   (corre el image-builder empaquetado como contenedor) y una red con DHCP
   disponible para la VM builder — ver los requisitos propios en
@@ -119,11 +122,9 @@ tu bucket:
 ```bash
 tofu init \
   -backend-config="bucket=<BUCKET_NAME>" \
-  -backend-config="key=00-lab.tfstate" \
+  -backend-config="key=0N-<paso>.tfstate" \
   -backend-config="region=us-east-1"
 ```
-
-(`02-vm-template` y `03-cluster-api` siguen con state local, sin backend.)
 
 El detalle específico de cada paso (variables obligatorias, comandos de
 Ansible/kubectl/clusterctl, verificaciones) está en el README de su

@@ -275,7 +275,7 @@ kubectl --kubeconfig clusters/tooling/.kube/config get nodes
   (namespace `management`) y `tooling` (namespace `tooling`), cada uno con
   Cilium como CNI.
 - Sus kubeconfigs en `clusters/management/.kube/config` y
-  `clusters/tooling/.kube/config` (gitignoreados).
+  `clusters/tooling/.kube/config` (agregado en el gitignores).
 - El cluster `kind` de bootstrap queda descartable una vez hecho el pivot
   (`kind delete cluster --name clusterctl`).
 
