@@ -14,7 +14,7 @@ spec:
 apiVersion: "cilium.io/v2alpha1"
 kind: CiliumLoadBalancerIPPool
 metadata:
-  name: "mw-pool"
+  name: "nerdearla-pool"
 spec:
   blocks:
     - start: "10.77.100.200"

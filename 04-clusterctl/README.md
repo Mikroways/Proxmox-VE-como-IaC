@@ -126,7 +126,7 @@ sshuttle -r root@$PROXMOX_HOST_IP -e 'ssh -i ../00-lab/proxmox-over-ec2-key.pem'
 
 ```bash
 kubectl get cluster,machines,proxmoxmachines -n management
-clusterctl describe cluster proxmox-mw -n management
+clusterctl describe cluster proxmox-nerdearla -n management
 ```
 
 El bootstrap de cada VM real (instalación de kubeadm/kubelet/containerd vía
@@ -135,7 +135,7 @@ tiene, vía la instancia EC2.
 
 ```bash
 mkdir -p clusters/management/.kube/
-clusterctl get kubeconfig proxmox-mw -n management > clusters/management/.kube/config
+clusterctl get kubeconfig proxmox-nerdearla -n management > clusters/management/.kube/config
 kubectl --kubeconfig clusters/management/.kube/config get nodes
 ```
 
@@ -160,7 +160,7 @@ helm --kubeconfig clusters/management/.kube/config list -A
 
 ## Pivot al cluster de management
 
-El nodo del cluster `proxmox-mw` no tiene workers (es solo control-plane).
+El nodo del cluster `proxmox-nerdearla` no tiene workers (es solo control-plane).
 `cluster.yaml`/`cluster.yaml.sample` ya le dicen a kubeadm que no le ponga
 el taint de control-plane (`initConfiguration.nodeRegistration.taints: []`)
 — si lo tuviera, `clusterctl init` no podría alojar sus propios pods ahí
@@ -196,10 +196,10 @@ Para confirmar que el pivot realmente funcionó (no solo que los objetos
 "existen" en el destino):
 
 ```bash
-kubectl --kubeconfig clusters/management/.kube/config get cluster proxmox-mw -n management -o jsonpath='{.spec.paused}{"\n"}'
+kubectl --kubeconfig clusters/management/.kube/config get cluster proxmox-nerdearla -n management -o jsonpath='{.spec.paused}{"\n"}'
 # vacio = no pausado, reconciliando activo (esperado despues del pivot)
 
-clusterctl --kubeconfig clusters/management/.kube/config describe cluster proxmox-mw -n management
+clusterctl --kubeconfig clusters/management/.kube/config describe cluster proxmox-nerdearla -n management
 # STATUS/REASON deben decir True/Available en Cluster y ControlPlane
 
 kubectl --kubeconfig clusters/management/.kube/config logs -n capmox-system deploy/capmox-controller-manager --tail=20
@@ -214,10 +214,6 @@ Con el cluster management ya migrado (pivot hecho), creamos el namespace y
 aplicamos el segundo cluster **desde `clusters/management/`** (ahí vive
 `cluster-tooling.yaml` — se aplica contra el cluster management, que tiene
 los controladores de CAPI después del pivot):
-
-```bash
-kubectl --kubeconfig clusters/management/.kube/config create namespace tooling
-```
 
 Antes de aplicar el cluster, crear el Secret con el token `capi-tooling`
 (sale de `tokens.yaml`, generado por

@@ -6,10 +6,10 @@ metadata:
 apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
-  name: proxmox-mw
+  name: proxmox-nerdearla
   namespace: management
   labels:
-    cluster.x-k8s.io/cluster-name: proxmox-mw
+    cluster.x-k8s.io/cluster-name: proxmox-nerdearla
     baseHelmCharts: enabled
 spec:
   clusterNetwork:
@@ -19,19 +19,19 @@ spec:
   infrastructureRef:
     apiGroup: infrastructure.cluster.x-k8s.io
     kind: ProxmoxCluster
-    name: proxmox-mw
+    name: proxmox-nerdearla
   controlPlaneRef:
     apiGroup: controlplane.cluster.x-k8s.io
     kind: KubeadmControlPlane
-    name: proxmox-mw-control-plane
+    name: proxmox-nerdearla-control-plane
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: ProxmoxCluster
 metadata:
-  name: proxmox-mw
+  name: proxmox-nerdearla
   namespace: management
   labels:
-    cluster.x-k8s.io/cluster-name: proxmox-mw
+    cluster.x-k8s.io/cluster-name: proxmox-nerdearla
 spec:
   controlPlaneEndpoint:
     host: 10.77.100.2
@@ -52,7 +52,7 @@ spec:
 apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane
 metadata:
-  name: proxmox-mw-control-plane
+  name: proxmox-nerdearla-control-plane
   namespace: management
 spec:
   replicas: 1
@@ -62,7 +62,7 @@ spec:
       infrastructureRef:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: ProxmoxMachineTemplate
-        name: proxmox-mw-control-plane
+        name: proxmox-nerdearla-control-plane
   kubeadmConfigSpec:
     files:
     - path: /etc/capi-install-k8s.sh
@@ -245,7 +245,7 @@ spec:
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha2
 kind: ProxmoxMachineTemplate
 metadata:
-  name: proxmox-mw-control-plane
+  name: proxmox-nerdearla-control-plane
   namespace: management
 spec:
   template:
