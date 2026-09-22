@@ -22,7 +22,7 @@ metadata:
   namespace: tooling
   labels:
     cluster.x-k8s.io/cluster-name: tooling
-    baseHelmCharts: tooling
+    baseHelmCharts: enabled
 spec:
   clusterNetwork:
     pods:
@@ -261,9 +261,9 @@ spec:
       full: true
       storage: local
       pool: capi-tooling-vm
-      numSockets: 1
+      numSockets: 2
       numCores: 2
-      memoryMiB: 2048
+      memoryMiB: 4096
       disks:
         bootVolume:
           disk: scsi0
@@ -283,7 +283,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: tooling
 spec:
   clusterName: tooling
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
   template:
@@ -319,9 +319,9 @@ spec:
       full: true
       storage: local
       pool: capi-tooling-vm
-      numSockets: 1
+      numSockets: 2
       numCores: 2
-      memoryMiB: 2048
+      memoryMiB: 4096
       disks:
         bootVolume:
           disk: scsi0
