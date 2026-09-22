@@ -1,0 +1,4 @@
+# Datos sacados del archivo tokens.yaml en ../01-proxmox-terraform, bajo la key
+# tooling
+export PROXMOX_TOKEN="capi-tooling@pve!capi"
+export PROXMOX_SECRET="00000000-0000-0000-0000-000000000000"

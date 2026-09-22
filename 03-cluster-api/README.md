@@ -1,7 +1,7 @@
 # Instalación de un cluster con clusterctl
 
 Paso 3 del taller: el último necesario para tener un cluster de Kubernetes
-real corriendo sobre Proxmox. `clusterctl` define un flujo de vida completo
+real corriendo sobre Proxmox. `cluster api` define un flujo de vida completo
 para clusters de Kubernetes: crear un cluster efímero (kind), instalar ahí
 los controladores necesarios para un hipervisor/cloud dado, y desde ese
 cluster inicializar clusters reales a partir de manifiestos.
@@ -45,6 +45,9 @@ cluster inicializar clusters reales a partir de manifiestos.
 ## Antes de empezar
 
 ```bash
+cp .envrc.private.sample .envrc.private
+$EDITOR .envrc.private
+
 kind create cluster --name clusterctl
 kubectl get nodes
 ```
@@ -189,8 +192,17 @@ puede conectarse a su propia IP pública/elástica desde adentro). Por eso
 este `clusterctl init` usa `PROXMOX_URL_INTERNAL` en vez de `PROXMOX_URL`:
 
 ```bash
-PROXMOX_URL="$PROXMOX_URL_INTERNAL" clusterctl init --kubeconfig clusters/management/.kube/config \
+clusterctl init --kubeconfig clusters/management/.kube/config \
     --infrastructure proxmox --addon helm --ipam in-cluster
+
+# Antes de ejecutar el move, tenemos que permitirle eliminar el secreto de capmox-manager-credentials
+kubectl patch secret capmox-manager-credentials -n management --type=json \
+    -p='[{"op":"remove","path":"/metadata/finalizers"}]'
+
+# A su vez, vamos a tener que cambiar el endpoint, del privado al publico ya que
+# desde la instancia en AWS no vamos a poder acceder
+kubectl patch secret capmox-manager-credentials -n management --type=merge \
+    -p="{\"stringData\":{\"url\":\"$PROXMOX_URL_INTERNAL\"}}"
 
 clusterctl move --to-kubeconfig clusters/management/.kube/config -n management
 ```
@@ -239,26 +251,12 @@ lo muestra al crear un token). Hay que partirlo en el `=`: todo lo de antes es
 `capi-tooling@pve!capi=6771f42b-47e1-47a6-a127-6cacf659ac2e`:
 
 ```bash
-kubectl --kubeconfig clusters/management/.kube/config apply -f - <<'EOF'
-apiVersion: v1
-kind: Secret
-metadata:
-  name: tooling-proxmox-credentials
-  namespace: tooling
-  labels:
-    platform.ionos.com/secret-type: proxmox-credentials
-stringData:
-  token: "capi-tooling@pve!capi"
-  secret: "6771f42b-47e1-47a6-a127-6cacf659ac2e"
-  url: "https://<IP del nodo>:8006"
-EOF
-```
+cd clusters/management
+envsubst < cluster-tooling.yaml.sample > cluster-tooling.yaml
+envsubst < ../../helm-chart-proxies.yaml.sample > helm-chart-proxies.yaml
 
-Con el namespace y el Secret ya creados, aplicamos el cluster y los charts:
-
-```bash
-envsubst '$VM_SSH_KEYS' < clusters/management/cluster-tooling.yaml | kubectl --kubeconfig clusters/management/.kube/config apply -f -
-envsubst < clusters/management/helm-chart-proxies.yaml | kubectl --kubeconfig clusters/management/.kube/config apply -f -
+kubectl apply -f cluster-tooling.yaml
+kubectl apply -f helm-chart-proxies.yaml
 ```
 
 ```bash

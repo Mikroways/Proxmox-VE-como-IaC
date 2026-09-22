@@ -45,12 +45,6 @@ tokens, pools y ACLs necesarios para trabajar después con Cluster API
    `credentials.yaml` queda agregado en el gitignore — nunca se commitea con valores
    reales.
 
-2. Copiar `terraform.tfvars.example` a `terraform.tfvars` (agregado en el gitignore):
-
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   ```
-
 ## Uso
 
 ```bash

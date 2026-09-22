@@ -61,7 +61,7 @@ asdf install
 
 # 2. Configurar el profile de AWS (AWS_PROFILE vive en ../.envrc, no aca -
 # es compartido con el resto del taller)
-$EDITOR ../.envrc
+$EDITOR .envrc.profiles
 direnv allow       # de paso, esto ya arma el venv de Ansible via uv sync
 
 # 3. Configurar variables (obligatorio: allowed_cidr_blocks)
@@ -78,8 +78,9 @@ tofu plan
 tofu apply
 
 # 5. Instalar Proxmox VE sobre la instancia ya creada
-uv run ansible-galaxy install -r ansible/requirements.yml --force
-uv run  ansible-playbook -i ansible/inventory.yml ansible/playbook.yml
+cd ansible
+uv run ansible-galaxy install -r requirements.yml --force
+uv run  ansible-playbook -i inventory.yml playbook.yml
 ```
 
 Sin `direnv` (o si todavía no corriste `direnv allow`), el paso 5 necesita
@@ -104,6 +105,8 @@ ssh -i ./proxmox-over-ec2-key.pem admin@$(tofu output -raw instance_public_ip) s
 ```
 
 ```bash
+$EDITOR ../.envrc.private
+
 # .envrc.private, en la raíz del repo (agregado en el gitignore):
 export PROXMOX_HOST_IP="<primer comando de arriba>"
 export PROXMOX_VE_PASSWORD="<segundo comando de arriba>"

@@ -49,6 +49,8 @@
         # (repo pve-no-subscription, /etc/hosts, etc.) se dejan en su
         # default, que ya es lo que necesitamos para un nodo solo.
         pve_reboot_on_kernel_update: true
+      tags:
+        - proxmox
 
   tasks:
     # La UI web de Proxmox (8006) autentica "root" via PAM con password,
@@ -58,6 +60,8 @@
       ansible.builtin.set_fact:
         proxmox_root_password: "{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_letters', 'digits']) }}"
       no_log: true
+      tags:
+        - access
 
     - name: Aplicar el password generado al usuario root
       ansible.builtin.shell:
@@ -65,6 +69,8 @@
         executable: /bin/bash
       no_log: true
       changed_when: true
+      tags:
+        - access
 
     - name: Guardar el password en el host para poder recuperarlo por SSH
       ansible.builtin.copy:
@@ -74,6 +80,8 @@
         group: root
         mode: "0600"
       no_log: true
+      tags:
+        - access
 
     # La instancia EC2 solo trae una interfaz con IP publica - sin un
     # bridge propio, capmox no tiene donde conectar la red de las VMs que
@@ -89,11 +97,15 @@
         group: root
         mode: "0644"
       register: _sysctl_vmbr0_nat
+      tags:
+        - network
 
     - name: Aplicar el sysctl si cambio
       ansible.builtin.command: sysctl -p /etc/sysctl.d/99-vmbr0-nat.conf
       when: _sysctl_vmbr0_nat.changed
       changed_when: true
+      tags:
+        - network
 
     - name: Agregar el bridge vmbr0 con NAT para las VMs anidadas
       ansible.builtin.blockinfile:
@@ -109,11 +121,15 @@
               post-up iptables -t nat -A POSTROUTING -s '10.77.100.0/24' -o {{ ansible_facts['default_ipv4']['interface'] }} -j MASQUERADE
               post-down iptables -t nat -D POSTROUTING -s '10.77.100.0/24' -o {{ ansible_facts['default_ipv4']['interface'] }} -j MASQUERADE
       register: _vmbr0_interfaces_conf
+      tags:
+        - network
 
     - name: Levantar vmbr0 sin reiniciar el nodo (ifupdown2)
       ansible.builtin.command: ifreload -a
       when: _vmbr0_interfaces_conf.changed
       changed_when: true
+      tags:
+        - network
 
     # image-builder (Packer) necesita DHCP para la VM de build - el plugin
     # de Packer para Proxmox no soporta IP estatica (confirmado contra la
@@ -124,13 +140,16 @@
       ansible.builtin.apt:
         name: dnsmasq
         state: present
-        update_cache: true
+      tags:
+        - network
 
     - name: Deshabilitar dnsmasq como resolver systemd-resolved (solo lo usamos para DHCP)
       ansible.builtin.systemd:
         name: systemd-resolved
         state: started
         enabled: true
+      tags:
+        - network
 
     - name: Configurar dnsmasq - solo DHCP en vmbr0, sin DNS
       ansible.builtin.copy:
@@ -149,6 +168,8 @@
           dhcp-option=3,10.77.100.1
           dhcp-option=6,1.1.1.1
       register: _dnsmasq_conf
+      tags:
+        - network
 
     - name: Reiniciar dnsmasq si cambio la config
       ansible.builtin.systemd:
@@ -156,12 +177,16 @@
         state: restarted
         enabled: true
       when: _dnsmasq_conf.changed
+      tags:
+        - network
 
     - name: Asegurar que dnsmasq este arriba
       ansible.builtin.systemd:
         name: dnsmasq
         state: started
         enabled: true
+      tags:
+        - network
 
   post_tasks:
     - name: Mostrar como acceder
@@ -171,3 +196,5 @@
           (usuario root, password en /root/.proxmox-root-password -
           recuperalo con: ssh -i <key> {{ ansible_user }}@{{ ansible_host }}
           sudo cat /root/.proxmox-root-password)
+      tags:
+        - summary

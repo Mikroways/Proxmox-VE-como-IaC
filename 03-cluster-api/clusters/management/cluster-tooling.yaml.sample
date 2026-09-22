@@ -3,6 +3,18 @@ kind: Namespace
 metadata:
   name: tooling
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tooling-proxmox-credentials
+  namespace: tooling
+  labels:
+    platform.ionos.com/secret-type: proxmox-credentials
+stringData:
+  token: "$PROXMOX_TOKEN"
+  secret: "$PROXMOX_SECRET"
+  url: "$PROXMOX_URL_INTERNAL"
+---
 apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
@@ -47,6 +59,7 @@ spec:
   - proxmox-lab
   credentialsRef:
     name: tooling-proxmox-credentials
+    namespace: tooling
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: KubeadmControlPlane
@@ -55,7 +68,7 @@ metadata:
   namespace: tooling
 spec:
   replicas: 1
-  version: v1.34.10
+  version: v1.36.3
   machineTemplate:
     spec:
       infrastructureRef:
@@ -71,8 +84,8 @@ spec:
         #!/bin/bash
         set -euo pipefail
 
-        KUBERNETES_VERSION_SERIES="1.34"
-        KUBERNETES_VERSION="1.34.10"
+        KUBERNETES_VERSION_SERIES="1.36"
+        KUBERNETES_VERSION="1.36.3"
 
         swapoff -a
         sed -i '/\sswap\s/s/^/#/' /etc/fstab
@@ -82,15 +95,15 @@ spec:
         systemctl enable --now qemu-guest-agent
 
         install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL "https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/Release.key" | \
+        curl -fsSL "https://pkgs.k8s.io/core:/stable:/v$${KUBERNETES_VERSION_SERIES}/deb/Release.key" | \
           gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
         chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/ /" \
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$${KUBERNETES_VERSION_SERIES}/deb/ /" \
           > /etc/apt/sources.list.d/kubernetes.list
 
         apt-get update
-        apt-get install -y "kubelet=${KUBERNETES_VERSION}-*" "kubeadm=${KUBERNETES_VERSION}-*" "kubectl=${KUBERNETES_VERSION}-*" containerd
+        apt-get install -y "kubelet=$${KUBERNETES_VERSION}-*" "kubeadm=$${KUBERNETES_VERSION}-*" "kubectl=$${KUBERNETES_VERSION}-*" containerd
         apt-mark hold kubelet kubeadm kubectl
 
         mkdir -p /etc/containerd
@@ -248,9 +261,9 @@ spec:
       full: true
       storage: local
       pool: capi-tooling-vm
-      numSockets: 2
-      numCores: 4
-      memoryMiB: 8192
+      numSockets: 1
+      numCores: 2
+      memoryMiB: 2048
       disks:
         bootVolume:
           disk: scsi0
@@ -270,7 +283,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: tooling
 spec:
   clusterName: tooling
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
   template:
@@ -280,7 +293,7 @@ spec:
         node-role.kubernetes.io/node: ""
     spec:
       clusterName: tooling
-      version: v1.34.10
+      version: v1.36.3
       bootstrap:
         configRef:
           apiGroup: bootstrap.cluster.x-k8s.io
@@ -306,9 +319,9 @@ spec:
       full: true
       storage: local
       pool: capi-tooling-vm
-      numSockets: 2
-      numCores: 4
-      memoryMiB: 8192
+      numSockets: 1
+      numCores: 2
+      memoryMiB: 2048
       disks:
         bootVolume:
           disk: scsi0
@@ -335,8 +348,8 @@ spec:
           #!/bin/bash
           set -euo pipefail
 
-          KUBERNETES_VERSION_SERIES="1.34"
-          KUBERNETES_VERSION="1.34.10"
+          KUBERNETES_VERSION_SERIES="1.36"
+          KUBERNETES_VERSION="1.36.3"
 
           swapoff -a
           sed -i '/\sswap\s/s/^/#/' /etc/fstab
@@ -346,15 +359,15 @@ spec:
           systemctl enable --now qemu-guest-agent
 
           install -m 0755 -d /etc/apt/keyrings
-          curl -fsSL "https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/Release.key" | \
+          curl -fsSL "https://pkgs.k8s.io/core:/stable:/v$${KUBERNETES_VERSION_SERIES}/deb/Release.key" | \
             gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
           chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-          echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SERIES}/deb/ /" \
+          echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$${KUBERNETES_VERSION_SERIES}/deb/ /" \
             > /etc/apt/sources.list.d/kubernetes.list
 
           apt-get update
-          apt-get install -y "kubelet=${KUBERNETES_VERSION}-*" "kubeadm=${KUBERNETES_VERSION}-*" "kubectl=${KUBERNETES_VERSION}-*" containerd
+          apt-get install -y "kubelet=$${KUBERNETES_VERSION}-*" "kubeadm=$${KUBERNETES_VERSION}-*" "kubectl=$${KUBERNETES_VERSION}-*" containerd
           apt-mark hold kubelet kubeadm kubectl
 
           mkdir -p /etc/containerd
@@ -386,4 +399,4 @@ spec:
       users:
       - name: root
         sshAuthorizedKeys:
-      - ${VM_SSH_KEYS}
+        - ${VM_SSH_KEYS}

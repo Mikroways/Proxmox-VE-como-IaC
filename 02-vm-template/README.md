@@ -34,13 +34,12 @@ instancia autorizada también para `root` (ver `00-lab/ansible/playbook.yml`).
 Antes de aplicar, cargar esa key en el agente SSH:
 
 ```bash
-ssh-add $(cd ../00-lab && tofu output -raw private_key_path)
+ssh-add ../00-lab/proxmox-over-ec2-key.pem
 ```
 
 ## Uso
 
 ```bash
-cp terraform.tfvars.example terraform.tfvars
 tofu init
 tofu plan
 tofu apply
@@ -51,3 +50,8 @@ tofu apply
 Un **template** `ubuntu-2404-k8s-base` en el nodo `proxmox-lab`, con tag
 `ubuntu-24.04` — es lo que usa `templateSelector.matchTags` en
 `../03-cluster-api/cluster.yaml.sample`.
+
+## Siguiente paso
+
+El siguiente paso va a ser crear un cluster de k8s usando cluster api, la guía
+para esto se encuentra en [03-cluster-api](../03-cluster-api/README.md)

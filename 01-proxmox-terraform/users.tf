@@ -32,16 +32,16 @@ resource "proxmox_virtual_environment_user" "clusterapi" {
   }
 }
 
-resource "proxmox_virtual_environment_user_token" "clusterapi_token" {
+resource "proxmox_user_token" "clusterapi_token" {
   for_each   = toset(var.capi_clusters)
   comment    = "Cluster ${each.key} API token"
   token_name = "capi"
   user_id    = proxmox_virtual_environment_user.clusterapi[each.key].user_id
 }
 
-resource "proxmox_virtual_environment_acl" "clusterapi_token_permission" {
+resource "proxmox_acl" "clusterapi_token_permission" {
   for_each = local.capi_token_permissions
-  token_id = proxmox_virtual_environment_user_token.clusterapi_token[each.value.cluster].id
+  token_id = proxmox_user_token.clusterapi_token[each.value.cluster].id
 
   role_id   = each.value.permission.role_id
   path      = each.value.permission.path
@@ -72,23 +72,23 @@ resource "proxmox_virtual_environment_user" "k8s-csi" {
   }
 }
 
-resource "proxmox_virtual_environment_user_token" "k8s-csi_token" {
+resource "proxmox_user_token" "k8s-csi_token" {
   comment    = "k8s csi token"
   token_name = "k8s-csi"
   user_id    = proxmox_virtual_environment_user.k8s-csi.user_id
 }
 
-resource "proxmox_virtual_environment_acl" "k8s-csi_token_permission-datastore" {
+resource "proxmox_acl" "k8s-csi_token_permission-datastore" {
   for_each = { for i in local.capi_disk_storage_permissions : i.path => i }
-  token_id = proxmox_virtual_environment_user_token.k8s-csi_token.id
+  token_id = proxmox_user_token.k8s-csi_token.id
 
   role_id   = proxmox_virtual_environment_role.k8s-csi-datastore.id
   path      = each.key
   propagate = false
 }
 
-resource "proxmox_virtual_environment_acl" "k8s-csi_token_permission-vm" {
-  token_id = proxmox_virtual_environment_user_token.k8s-csi_token.id
+resource "proxmox_acl" "k8s-csi_token_permission-vm" {
+  token_id = proxmox_user_token.k8s-csi_token.id
 
   role_id   = proxmox_virtual_environment_role.k8s-csi-vm.id
   path      = "/pool"
@@ -110,14 +110,14 @@ resource "proxmox_virtual_environment_user" "imagebuilder" {
   password = local.credentials.users.imagebuilder.password
 }
 
-resource "proxmox_virtual_environment_user_token" "imagebuilder_token" {
+resource "proxmox_user_token" "imagebuilder_token" {
   comment    = "image-builder API token"
   token_name = "imagebuilder"
   user_id    = proxmox_virtual_environment_user.imagebuilder.user_id
 }
 
-resource "proxmox_virtual_environment_acl" "imagebuilder_token" {
-  token_id = proxmox_virtual_environment_user_token.imagebuilder_token.id
+resource "proxmox_acl" "imagebuilder_token" {
+  token_id = proxmox_user_token.imagebuilder_token.id
 
   path      = "/"
   propagate = true
