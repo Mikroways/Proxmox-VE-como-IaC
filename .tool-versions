@@ -1,0 +1,8 @@
+opentofu 1.12.6
+direnv 2.37.1
+uv 0.12.17
+clusterctl 1.12.9
+kind 0.32.0
+kubectl 1.36.4
+krew 0.5.0
+helm 4.3.0

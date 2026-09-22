@@ -1,0 +1,5 @@
+# Datos sacados del archivo tokens.yaml en ../01-proxmox-terraform, bajo la key
+# management
+export PROXMOX_VE_TOKEN="capi-management@pve!capi"
+export PROXMOX_VE_SECRET="00000000-0000-0000-0000-000000000000"
+export VM_SSH_KEYS="ssh-rsa dummy"

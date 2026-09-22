@@ -25,7 +25,3 @@ layout_uv() {
   export VIRTUAL_ENV="$venv_path"
   PATH_add "$venv_path/bin"
 }
-
-layout uv
-
-export AWS_PROFILE=mw_mikroways.aws-sandbox.us-east-1.AWSAdministratorAccess

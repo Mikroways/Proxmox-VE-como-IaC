@@ -24,6 +24,6 @@ resource "local_sensitive_file" "private_key" {
   # "OPENSSH PRIVATE KEY" y fallan con "error in libcrypto" si al archivo
   # le falta ese newline al final - lo volvemos a agregar.
   content         = "${module.key_pair.private_key_openssh}\n"
-  filename        = "${path.module}/${local.name}-key.pem"
+  filename        = abspath("${path.module}/${local.name}-key.pem")
   file_permission = "0600"
 }
