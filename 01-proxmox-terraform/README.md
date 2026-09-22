@@ -12,8 +12,7 @@ tokens, pools y ACLs necesarios para trabajar después con Cluster API
   `VM.*` — que es lo que pide `kubernetes-sigs/image-builder` para poder
   crear y convertir VMs en template).
 - **Usuarios** (todos con token API): `terraform@pve`, `capi-management@pve`
-  / `capi-tooling@pve` (uno por cada entrada de `capi_clusters`),
-  `k8s-pve-exporter@pve` (solo `PVEAuditor`), `k8s-csi@pve`,
+  / `capi-tooling@pve` (uno por cada entrada de `capi_clusters`), `k8s-csi@pve`,
   `imagebuilder@pve` (lo consume `../04-image-builder`).
 - **Pools**: `capi-management-vm`, `capi-tooling-vm` (uno por cada cluster, VMs
   aisladas entre clusters), `capi-template` (compartido, solo templates —
@@ -70,19 +69,19 @@ por usuario. De estos:
 
 - `capi-management` y `capi-tooling` los consume `../03-cluster-api/` (uno
   por `ProxmoxCluster`, para aislar permisos entre clusters).
+- `terraform` lo consume `../02-vm-template/` (pegado a mano en su
+  propio `.envrc.private`, ver el README de ese directorio).
 - `imagebuilder` lo consume `../04-image-builder/` (pegado a mano en su
   propio `.envrc.private`, ver el README de ese directorio).
-- `k8s-csi` y `pve_exporter` quedan generados y disponibles para cuando se
-  instale el CSI driver o el exporter de Proxmox — está fuera del alcance
-  de este repo.
-- `terraform` no lo consume ningún paso siguiente.
-
-`../02-vm-template` **no** consume `tokens.yaml` — usa las credenciales
-`root@pam` heredadas de `00-lab/`. Lo que sí consume de este paso es el
-pool `capi-template`.
+- `k8s-csi` quedan generados y disponibles para cuando se instale el CSI driver
 
 Para leer los tokens generados:
 
 ```bash
 cat tokens.yaml
 ```
+
+## Siguiente paso
+
+El siguiente paso va a ser crear un template para ser usado como base para crear
+los nodos de Kubernetes, el mismo se encuentra en [02-vm-template](../02-vm-template/README.md)

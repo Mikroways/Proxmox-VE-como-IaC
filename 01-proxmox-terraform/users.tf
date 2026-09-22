@@ -49,35 +49,6 @@ resource "proxmox_virtual_environment_acl" "clusterapi_token_permission" {
 }
 
 ################################################################################
-# PVE exporter user and token
-################################################################################
-resource "proxmox_virtual_environment_user" "pve_exporter" {
-  acl {
-    path      = "/"
-    propagate = true
-    role_id   = "PVEAuditor"
-  }
-
-  comment  = "PVE exporter read-only user for metrics"
-  user_id  = local.credentials.users["pve-exporter"].username
-  password = local.credentials.users["pve-exporter"].password
-}
-
-resource "proxmox_virtual_environment_user_token" "pve_exporter_token" {
-  comment    = "PVE exporter API token"
-  token_name = "pve-exporter"
-  user_id    = proxmox_virtual_environment_user.pve_exporter.user_id
-}
-
-resource "proxmox_virtual_environment_acl" "pve_exporter_token" {
-  token_id = proxmox_virtual_environment_user_token.pve_exporter_token.id
-
-  path      = "/"
-  propagate = true
-  role_id   = "PVEAuditor"
-}
-
-################################################################################
 # CSI user and token
 ################################################################################
 

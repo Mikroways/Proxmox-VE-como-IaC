@@ -141,3 +141,8 @@ definida unos pasos antes.
 Recordá correr `tofu destroy` al terminar la prueba. Podés bajar el
 tamaño con `instance_type` (debe seguir siendo familia `c8i`, `m8i` o
 `r8i`, son las únicas con nested virtualization en instancia virtual).
+
+## Siguiente paso
+
+El siguiente paso a crear los recursos en proxmox usando IaC. La guía del
+siguiente paso se encuentra en [01-proxmox-terraform](../01-proxmox-terraform/README.md)

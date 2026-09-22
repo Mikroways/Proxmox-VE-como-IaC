@@ -5,18 +5,9 @@ pool `capi-template` usado acá). Construye el template que va a clonar
 capmox para las VMs de Kubernetes: una cloud image genérica de Ubuntu 24.04,
 con el agente QEMU instalado vía cloud-init.
 
-A diferencia del PoC original (que usaba Packer + `kubernetes-sigs/image-builder`
-para hornear un template con kubeadm/kubelet ya instalados), acá el template
-es genérico — kubeadm/kubelet/containerd se instalan **en el boot de cada
-VM real**, vía `preKubeadmCommands` (ver
-[`../03-cluster-api/cluster.yaml.sample`](../03-cluster-api/cluster.yaml.sample)).
-Ventaja: cambiar la versión de k8s no requiere reconstruir ningún template,
-solo editar el manifiesto de `03-cluster-api/`. `../04-image-builder/` ofrece
-un camino alternativo: hornear esos mismos pasos en el template.
-
 ## Qué crea
 
-- Un **template** de VM (nunca bootea) llamado `ubuntu-2404-k8s-base`, tag
+- Un **template** de VM llamado `ubuntu-2404-k8s-base`, tag
   `ubuntu-24.04`, en el pool `capi-template` (creado por
   `../01-proxmox-terraform`).
 - A partir de la cloud image oficial de Ubuntu 24.04 (`noble`), descargada
